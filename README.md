@@ -3,6 +3,8 @@
 **A remote control for AI agents.** Your agent keeps working; you keep the buttons.
 Agent Remote holds every risky tool call an AI agent tries to make, has an LLM explain it in one plain sentence with a risk score, and lets you **Allow**, **Deny**, **Fix** (rewrite the call in plain words) or **KILL ALL** from your phone.
 
+**▶ Demo video (2 min):** https://youtu.be/yp9PcVUzi-s  ·  **Live demo:** https://agent-remote-b0zo.onrender.com
+
 ![Agent Remote: an agent's delete call flagged critical and off-goal on the phone](docs/screenshot-critical.png)
 
 Built for the [Remote Control AI](https://remote-control-ai.devpost.com/) hackathon (Nov 2026).
