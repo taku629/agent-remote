@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111318">
+<link rel="manifest" href="/manifest.json">
+<title>Agent Remote</title>
+<style>
+:root{--bg:#111318;--card:#1b1e26;--line:#2a2f3a;--txt:#eef0f4;--mut:#9aa3b2;
+--low:#3ecf8e;--medium:#f5c451;--high:#ff8a3d;--critical:#ff4d5e;--accent:#6ea8ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);
+font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Hiragino Sans",sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding:14px 16px 10px;border-bottom:1px solid var(--line);
+display:flex;align-items:center;gap:10px}
+header h1{font-size:18px;margin:0;flex:1}.dot{width:9px;height:9px;border-radius:50%;background:var(--low);display:inline-block;margin-right:6px}
+#kill{border:0;border-radius:999px;padding:10px 16px;font-weight:800;background:var(--critical);color:#fff;letter-spacing:.5px}
+#kill.on{background:#444;color:#ffb3ba}
+main{padding:12px 14px 120px;max-width:560px;margin:0 auto}
+.banner{display:none;background:#3a1218;border:1px solid var(--critical);color:#ffc2c8;border-radius:12px;padding:12px;margin-bottom:12px;font-weight:600}
+.killed .banner{display:block}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--mut);margin:18px 2px 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px;border-left:6px solid var(--line)}
+.card.low{border-left-color:var(--low)}.card.medium{border-left-color:var(--medium)}
+.card.high{border-left-color:var(--high)}.card.critical{border-left-color:var(--critical)}
+.top{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mut)}
+.risk{font-weight:800;text-transform:uppercase;padding:2px 8px;border-radius:999px;color:#111}
+.risk.low{background:var(--low)}.risk.medium{background:var(--medium)}.risk.high{background:var(--high)}.risk.critical{background:var(--critical);color:#fff}
+.title{font-size:19px;font-weight:750;margin:8px 0 4px}
+.sum{color:#d6dae2}
+.flags{margin:8px 0 0;padding:0;list-style:none}.flags li{font-size:14px;color:#ffd1a8}.flags li:before{content:"⚠ "}
+.meta{font-size:13px;color:var(--mut);margin-top:6px}
+.alt{font-size:14px;background:#14261d;border:1px solid #23503a;border-radius:10px;padding:8px;margin-top:8px}
+details{margin-top:8px}summary{color:var(--accent);font-size:13px;cursor:pointer}
+pre{white-space:pre-wrap;word-break:break-word;background:#0c0e12;border-radius:8px;padding:8px;font-size:12px;color:#c9d1e0;margin:6px 0 0}
+.btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
+.btns button{border:0;border-radius:12px;padding:14px 4px;font-weight:750;font-size:15px}
+.allow{background:var(--low);color:#062}.deny{background:#3a3f4b;color:#fff}.fix{background:var(--accent);color:#012}
+.fixbox{display:none;margin-top:8px;gap:8px}.fixbox.open{display:flex}
+input,textarea{flex:1;background:#0c0e12;border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:10px;font:inherit}
+.fixbox button,.ruleform button{border:0;border-radius:10px;background:var(--accent);color:#012;font-weight:700;padding:0 14px}
+.done{opacity:.72}.verdict{font-weight:700;margin-top:8px;font-size:14px}
+.verdict.allowed{color:var(--low)}.verdict.denied{color:var(--critical)}
+.empty{color:var(--mut);text-align:center;padding:28px 10px;border:1px dashed var(--line);border-radius:16px}
+.ruleform{display:flex;gap:8px}.rule{display:flex;gap:8px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:8px;font-size:14px}
+.rule b{font-size:11px;text-transform:uppercase;padding:2px 6px;border-radius:6px;background:#333}
+.rule b.block{background:var(--critical)}.rule b.ask{background:var(--medium);color:#111}.rule b.allow{background:var(--low);color:#111}
+.rule span{flex:1}.rule small{display:block;color:var(--mut)}.rule button{background:none;border:0;color:var(--mut);font-size:18px}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid var(--mut);border-top-color:transparent;border-radius:50%;animation:s 1s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header><h1><span class="dot" id="live"></span>Agent Remote</h1><button id="kill">KILL ALL</button></header>
+<main>
+  <div class="banner">Kill switch is ON. Every agent action is being refused. Tap the button again to resume.</div>
+  <button id="demo" style="display:none;width:100%;border:1px solid var(--accent);background:#14203a;color:var(--txt);border-radius:14px;padding:14px;font-weight:700;margin:4px 0 6px">▶ Start the demo agent (cleanup-bot)</button>
+  <h2>Waiting for you</h2><div id="pending"></div>
+  <h2>House rules <small style="text-transform:none;letter-spacing:0">(plain language, AI turns them into policy)</small></h2>
+  <form class="ruleform" id="ruleform"><input id="ruletext" placeholder="e.g. Never let it touch .env files"><button>Add</button></form>
+  <div id="rules"></div>
+  <h2>History</h2><div id="history"></div>
+</main>
+<script>
+const T = new URLSearchParams(location.search).get('token') || localStorage.getItem('ar_token') || '';
+if (T) localStorage.setItem('ar_token', T);
+const H = {'Content-Type':'application/json', ...(T ? {'x-remote-token':T} : {})};
+const q = s => document.querySelector(s);
+let calls = {}, rules = [], killed = false;
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ago = t => { const s = Math.round(Date.now()/1000 - t); return s < 60 ? s+'s ago' : Math.round(s/60)+'m ago'; };
+
+function card(c){
+  const a = c.analysis || {}; const r = a.risk || 'medium';
+  const pending = c.status === 'pending';
+  let h = `<div class="card ${c.status==='analyzing'?'':r} ${pending?'':'done'}" id="c${c.id}">
+   <div class="top">${c.status==='analyzing'?'<span class="spin"></span> reading the call…':`<span class="risk ${r}">${r}</span>`}
+   <span>${esc(c.agent)} · <code>${esc(c.tool)}</code> · ${ago(c.created)}</span></div>`;
+  if (a.title) {
+    h += `<div class="title">${esc(a.title)}</div><div class="sum">${esc(a.summary)}</div>`;
+    if ((a.red_flags||[]).length) h += `<ul class="flags">${a.red_flags.map(f=>`<li>${esc(f)}</li>`).join('')}</ul>`;
+    h += `<div class="meta">${a.reversible?'Can be undone':'<b>Cannot be undone</b>'} · ${esc(a.blast_radius||'')}</div>`;
+    if (a.matches_goal === false) h += `<div class="meta" style="color:#ffb3ba">Off-goal: ${esc(a.goal_note)}</div>`;
+    if (pending && a.safer_alternative) h += `<div class="alt">Safer: ${esc(a.safer_alternative)}</div>`;
+    if (c.rule) h += `<div class="meta">Asked because of your rule: “${esc(c.rule)}”</div>`;
+  }
+  h += `<details><summary>Raw call</summary><pre>${esc(JSON.stringify(c.args,null,2))}</pre>${c.goal?`<pre>Goal: ${esc(c.goal)}</pre>`:''}</details>`;
+  if (pending) h += `<div class="btns"><button class="allow" onclick="dec('${c.id}','allow')">Allow</button>
+     <button class="deny" onclick="dec('${c.id}','deny')">Deny</button><button class="fix" onclick="openFix('${c.id}')">Fix…</button></div>
+     <div class="fixbox" id="f${c.id}"><input id="fi${c.id}" placeholder="Say what to change, e.g. only the .tmp files"><button onclick="dec('${c.id}','fix')">Send</button></div>`;
+  else if (c.status !== 'analyzing') h += `<div class="verdict ${c.status}">${c.status==='allowed'?'✓ Allowed':'✕ Denied'} · ${esc(c.decided_by||'')} — ${esc(c.reason||'')}</div>`
+     + (c.original_args ? `<details><summary>What you changed</summary><pre>${esc(JSON.stringify(c.original_args))}\n→\n${esc(JSON.stringify(c.args))}</pre></details>` : '');
+  return h + '</div>';
+}
+function render(){
+  const all = Object.values(calls).sort((a,b)=>b.created-a.created);
+  const p = all.filter(c=>c.status==='pending'||c.status==='analyzing');
+  q('#pending').innerHTML = p.length ? p.map(card).join('') : '<div class="empty">Nothing needs you. Your agents are working.</div>';
+  q('#history').innerHTML = all.filter(c=>!p.includes(c)).slice(0,30).map(card).join('');
+  q('#rules').innerHTML = rules.map(r=>`<div class="rule"><b class="${r.action}">${r.action}</b><span>${esc(r.text)}<small>${esc(r.explanation||'')}${(r.tools||[]).length?' · tools: '+esc(r.tools.join(', ')):''}</small></span><button onclick="delRule('${r.id}')">×</button></div>`).join('');
+  document.body.classList.toggle('killed', killed);
+  q('#kill').textContent = killed ? 'RESUME' : 'KILL ALL'; q('#kill').classList.toggle('on', killed);
+  const n = p.filter(c=>c.status==='pending').length; document.title = (n?`(${n}) `:'')+'Agent Remote';
+}
+async function dec(id, verdict){
+  const note = verdict==='fix' ? q('#fi'+id).value : '';
+  if (verdict==='fix' && !note.trim()) return q('#fi'+id).focus();
+  const btns = document.querySelectorAll(`#c${id} button`); btns.forEach(b=>b.disabled=true);
+  const r = await fetch(`/api/calls/${id}/decision`,{method:'POST',headers:H,body:JSON.stringify({verdict,note})});
+  if (!r.ok){ alert(await r.text()); btns.forEach(b=>b.disabled=false); }
+}
+function openFix(id){ q('#f'+id).classList.add('open'); q('#fi'+id).focus(); }
+q('#kill').onclick = () => fetch('/api/kill',{method:'POST',headers:H,body:JSON.stringify({on:!killed})});
+q('#ruleform').onsubmit = async e => { e.preventDefault(); const t = q('#ruletext').value.trim(); if(!t) return;
+  q('#ruletext').value=''; q('#ruletext').placeholder='Compiling rule…';
+  await fetch('/api/rules',{method:'POST',headers:H,body:JSON.stringify({text:t})}); q('#ruletext').placeholder='Add another rule'; };
+const delRule = id => fetch('/api/rules/'+id,{method:'DELETE',headers:H});
+function notify(c){ if (c.status==='pending' && document.hidden && 'Notification' in window && Notification.permission==='granted')
+  new Notification(`${(c.analysis||{}).risk||''}: ${(c.analysis||{}).title||c.tool}`, {body:(c.analysis||{}).summary||''}); navigator.vibrate?.(200); }
+async function boot(){
+  const s = await (await fetch('/api/state',{headers:H})).json();
+  if (s.demo) { q('#demo').style.display='block'; q('#demo').onclick = async () => { const r = await fetch('/api/demo',{method:'POST',headers:H}); if(!r.ok) alert((await r.json()).detail); }; }
+  s.calls.forEach(c=>calls[c.id]=c); rules = s.rules; killed = s.killed; render();
+  const es = new EventSource('/api/stream'+(T?`?token=${encodeURIComponent(T)}`:''));
+  es.addEventListener('call', e => { const c = JSON.parse(e.data); const prev = calls[c.id]; calls[c.id]=c;
+    if (c.status==='pending' && (!prev || prev.status!=='pending')) notify(c); render(); });
+  es.addEventListener('rules', e => { rules = JSON.parse(e.data); render(); });
+  es.addEventListener('kill', e => { killed = JSON.parse(e.data).on; render(); });
+  es.onopen = () => q('#live').style.background='var(--low)'; es.onerror = () => q('#live').style.background='var(--critical)';
+  if ('Notification' in window && Notification.permission==='default') document.body.addEventListener('click',()=>Notification.requestPermission(),{once:true});
+  setInterval(render, 30000);
+}
+boot();
+</script>
+</body>
+</html>
