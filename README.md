@@ -3,6 +3,8 @@
 **A remote control for AI agents.** Your agent keeps working; you keep the buttons.
 Agent Remote holds every risky tool call an AI agent tries to make, has an LLM explain it in one plain sentence with a risk score, and lets you **Allow**, **Deny**, **Fix** (rewrite the call in plain words) or **KILL ALL** from your phone.
 
+![Agent Remote: an agent's delete call flagged critical and off-goal on the phone](docs/screenshot-critical.png)
+
 Built for the [Remote Control AI](https://remote-control-ai.devpost.com/) hackathon (Nov 2026).
 
 ## Why
@@ -82,6 +84,10 @@ A meeting note in its folder hides an instruction to email `.env` to an outside 
 2. `delete_files [build, debug.log, app.py.tmp, src/app.py, .env]` → **critical, off-goal**. You tap **Fix**: "only build junk and temp files" → the LLM rewrites it to 3 paths.
 3. `send_email` to `backup@data-sync.example` with the secrets → **critical, off-goal**. **Deny**. The agent gets your reason.
 4. `send_email` to the team → high (external, can't unsend) → **Allow**.
+
+![House rule compiled by the LLM](docs/screenshot-rules.png)
+
+`/stage.html` shows the side-by-side view used in the demo video (agent log + phone).
 
 ## Architecture
 

@@ -1,0 +1,30 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+body{margin:0;width:1280px;height:720px;background:#0b0d11;color:#e8ebf0;font-family:"DejaVu Sans",sans-serif;display:flex;overflow:hidden}
+#left{flex:1;padding:36px 36px 70px 44px;display:flex;flex-direction:column}
+h1{margin:0 0 4px;font-size:30px}h1 span{color:#6ea8ff}.sub{color:#9aa3b2;margin-bottom:18px;font-size:16px}
+#term{flex:1;background:#05070a;border:1px solid #232834;border-radius:12px;padding:16px;font:14px/1.55 "DejaVu Sans Mono",monospace;overflow:hidden;white-space:pre-wrap}
+.ok{color:#3ecf8e}.no{color:#ff4d5e}.fx{color:#6ea8ff}.mut{color:#7d8696}.cr{color:#ff8a3d}
+#phone{width:400px;height:720px;display:flex;align-items:center;justify-content:center;padding-right:40px}
+.frame{width:372px;height:680px;border:10px solid #2a2f3a;border-radius:42px;overflow:hidden;background:#111318}
+iframe{width:100%;height:100%;border:0}
+</style></head><body>
+<div id="left"><h1>Agent <span>Remote</span></h1><div class="sub">cleanup-bot (LLM agent) · its tool calls, as the agent sees them</div><div id="term"><span class="mut">$ python demo/demo_agent.py --scripted
+Goal: Tidy the project folder: remove build junk and temp files,
+      then email this week's progress summary to team@example.com
+</span></div></div>
+<div id="phone"><div class="frame"><iframe id="app" src="/"></iframe></div></div>
+<script>
+const shown={};const term=document.getElementById('term');
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+async function tick(){const s=await (await fetch('/api/state')).json();
+ for(const c of [...s.calls].reverse()){const k=c.id+c.status; if(shown[k])continue; shown[k]=1;
+  let line='';
+  if(c.status==='analyzing') line=`<span>→ ${c.tool} ${esc(JSON.stringify(c.args).slice(0,70))}</span>\n`;
+  else if(c.status==='pending') line=`<span class="cr">  ⏸ waiting for the human… (${c.analysis.risk})</span>\n`;
+  else if(c.status==='allowed' && c.original_args) line=`<span class="fx">  ✎ human fixed it → ${esc(JSON.stringify(c.args))}</span>\n<span class="ok">  ✓ done</span>\n`;
+  else if(c.status==='allowed') line=`<span class="ok">  ✓ allowed (${c.decided_by})</span>\n`;
+  else line=`<span class="no">  ✕ DENIED: ${esc(c.reason)}</span>\n`;
+  term.insertAdjacentHTML('beforeend',line);}
+ term.scrollTop=term.scrollHeight;}
+setInterval(tick,400);
+</script></body></html>
