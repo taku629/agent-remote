@@ -179,6 +179,8 @@ async def decide(cid: str, body: DecisionIn, req: Request):
             raise HTTPException(400, "say what to change")
         try:
             out = await asyncio.to_thread(llm.amend, {"tool": rec["tool"], "args": rec["args"]}, body.note)
+        except ValueError as e:
+            raise HTTPException(422, str(e)) from e
         except Exception as e:  # noqa: BLE001
             raise HTTPException(502, f"could not rewrite: {e}") from e
         rec.update(original_args=rec["args"], args=out["args"], status="allowed", decided_by="human (fixed)",

@@ -3,7 +3,7 @@
 **A remote control for AI agents.** Your agent keeps working; you keep the buttons.
 Agent Remote intercepts the tool calls an AI agent routes through it, has an LLM explain it in one plain sentence with a risk score, and lets you **Allow**, **Deny**, **Fix** (rewrite the call in plain words) or **KILL ALL** from your phone.
 
-**▶ Demo video (2:22):** https://youtu.be/7K3GdfmjbDw  ·  **Live demo:** https://agent-remote-b0zo.onrender.com
+**▶ Demo video (2:22):** https://youtu.be/7K3GdfmjbDw  ·  **Live demo:** https://agent-remote-b0zo.onrender.com (tap "Start the demo agent"; no API key needed; the free host can take ~50 s to wake)
 
 ![Agent Remote: an agent's delete call flagged critical and off-goal on the phone](docs/screenshot-critical.png)
 
@@ -22,14 +22,15 @@ Agent Remote is the middle ground: low-risk calls flow through, risky ones buzz 
 
 | Step | What the LLM does |
 |---|---|
-| **Explain** | Turns each pending tool call into a title, a one-line summary, blast radius, reversibility and red flags. |
+| **Explain** | Translates the raw JSON call into a plain-English title and summary, blast radius, reversibility and red flags. The call is passed to the model inside delimited `<untrusted_call>` tags as data; instructions found inside it are treated as a red flag, not followed. |
 | **Score** | Rates risk low / medium / high / critical, and raises it when the call doesn't match the agent's stated goal (flags goal mismatches typical of prompt injection). |
 | **Suggest** | Proposes a safer version of the same call. |
-| **Fix** | You type "only the .tmp files" and it rewrites the call's arguments. It is instructed to keep or narrow the original scope, and the rewritten call is shown to you. |
-| **House rules** | You write rules in plain language ("Never let it touch .env files"); the LLM compiles them into a matcher (tool + regex + min risk + allow/ask/block). |
+| **Fix** | You type "only the .tmp files" and it rewrites the call's arguments. A deterministic check (`llm.widens`) then rejects any rewrite that adds an argument or adds items to a list (paths, recipients), and the history shows before → after. |
+| **House rules** | You write rules in plain language ("Never let it touch .env files"); the LLM compiles them into a JSON matcher (tool names + regex + min risk + allow/ask/block) that plain Python evaluates on every call. |
 
 Low-risk calls are auto-allowed. Everything else waits for you (or a house rule). If the LLM is unreachable,
 a rule-based fallback scores the call, and the MCP proxy fails closed if the remote itself is down.
+**KILL ALL** denies every pending call and every new one until you press Resume; each agent receives the denial as its tool result.
 
 ## Plug it into any agent
 
@@ -118,4 +119,4 @@ Python, FastAPI, Server-Sent Events, vanilla JS PWA, httpx. No database: state i
 - [FastAPI](https://fastapi.tiangolo.com/), [Uvicorn](https://www.uvicorn.org/), [httpx](https://www.python-httpx.org/), [Pydantic](https://docs.pydantic.dev/).
 - Protocol: [Model Context Protocol](https://modelcontextprotocol.io/) (the proxy speaks JSON-RPC over stdio; no SDK needed).
 
-All code in this repository was written during the hackathon period (Nov 2026). MIT License.
+Built solo by Takumu Hata, a student at Tokyo International Professional University of Technology (IPUT). All code in this repository was written during the hackathon period (Nov 2026). MIT License.
